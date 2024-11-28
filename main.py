@@ -17,31 +17,26 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
     bilder = InlineKeyboardBuilder()
-    bilder.add(InlineKeyboardButton(text="Сборник", callback_data="go_to_test"))
-    await message.answer(f"Hello, <b>{message.from_user.full_name}</b>", reply_markup=bilder.as_markup())
+    bilder.row(InlineKeyboardButton(text="Сборник 📕", callback_data="go_to_storage"),
+               InlineKeyboardButton(text="Профиль", callback_data="go_to_profile"),
+               InlineKeyboardButton(text="Маркет", callback_data="go_to_market")
+               )
+    await message.answer(f"Привет, <b>{message.from_user.full_name}</b>", reply_markup=bilder.as_markup())
 
 
-@dp.callback_query(F.data == "go_to_test")
+@dp.callback_query(F.data == "go_to_storage")
 async def send_random_value(callback: CallbackQuery):
-    await callback.message.answer("ehd")
+    await callback.message.answer("<b>Вы</b> в сборнике")
     await callback.answer()
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
-    try:
-        # Send a copy of the received message
-        if message.text == "Дурак":
-            await message.answer("Сам такой!!!!!!")
-    except TypeError:
-        # But not all the types is supported to be copied so need to handle it
-        await message.answer("Nice try!")
+    pass
 
 
 
-async def main() -> None:
+async def main():
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
-    # And the run events dispatching
     await dp.start_polling(bot)
 
 
