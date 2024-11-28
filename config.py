@@ -1,1 +1,1 @@
-TOKEN = "wgwegwegwegwg"
+TOKEN = "wgwegwegweg"
