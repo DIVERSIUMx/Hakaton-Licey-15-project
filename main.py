@@ -1,18 +1,5 @@
-import asyncio
-import logging
-import sys
-from os import getenv
-from config import TOKEN
-
-from aiogram import Bot, Dispatcher, html, F
-from aiogram.utils.keyboard import *
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.types import Message, CallbackQuery
-
-dp = Dispatcher()
-
+from imports import *
+from functions import Functions
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
@@ -23,11 +10,9 @@ async def command_start_handler(message: Message) -> None:
                )
     await message.answer(f"Привет, <b>{message.from_user.full_name}</b>", reply_markup=bilder.as_markup())
 
-
-@dp.callback_query(F.data == "go_to_storage")
-async def send_random_value(callback: CallbackQuery):
-    await callback.message.answer("<b>Вы</b> в сборнике")
-    await callback.answer()
+@dp.callback_query(F.data.startswith("go_to_"))
+async def go_to_profile(callback: CallbackQuery):
+    await Functions().functions[callback.data](callback=callback)
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
