@@ -1,14 +1,18 @@
+from aiogram.types import InputFile
+
 from imports import *
 import functions
 
 @dp.message(CommandStart())
-async def starter(message: Message) -> None:
+async def starter(message: Message, bot: Bot) -> None:
+
     bilder = InlineKeyboardBuilder()
-    bilder.row(InlineKeyboardButton(text="Сборник 📕", callback_data="go_to_storage"))
+    bilder.row(InlineKeyboardButton(text="Сборники 📕", callback_data="go_to_storage"))
     bilder.row(InlineKeyboardButton(text="Профиль 🕵️‍", callback_data="go_to_profile"))
     bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
-
-    await message.answer(f"Привет, <b>{message.from_user.full_name}</b>", reply_markup=bilder.as_markup())
+    await bot.send_photo(message.chat.id, photo=FSInputFile("assets/photos/hello.png"),
+                         caption=f"Привет, <b>{message.from_user.full_name}</b>",
+                         reply_markup=bilder.as_markup())
 
 @dp.callback_query(F.data.startswith("go_to_"))
 async def go_to_profile(callback: CallbackQuery, bot: Bot):
