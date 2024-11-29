@@ -16,6 +16,8 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, FSInputFile
 
+Moderator_name_redact = {}
+Moderator_body_redact = {}
 dp = Dispatcher()
 CON = sqlite3.connect("main_db.sqlite")
 CUR = CON.cursor()

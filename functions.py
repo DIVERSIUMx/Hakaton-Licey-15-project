@@ -7,7 +7,7 @@ async def go_to_home(callback: CallbackQuery) -> None:
     bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
 
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile("assets/photos/hello.png"),
-                         caption=f"Привет, <b>{callback.from_user.full_name}</b>",
+                         caption=f"Главное меню",
                          reply_markup=bilder.as_markup())
     await callback.answer()
 
@@ -23,12 +23,15 @@ async def go_to_storage(callback=None):
 
 async def go_to_profile(callback=None):
     builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_home"))
+
     user = CUR.execute(f"SELECT * FROM users WHERE telegram_id={callback.from_user.id}").fetchall()
     if len(user) == 0:
         CUR.execute(f"INSERT INTO users(telegram_id) VALUES({callback.from_user.id})")
         CON.commit()
     user = CUR.execute(f"SELECT * FROM users WHERE telegram_id={callback.from_user.id}").fetchall()[0]
+    if user[3]:
+        builder.row(InlineKeyboardButton(text="❗ Входящие запросы", callback_data="go_to_requests"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_home"))
     await callback.message.answer(f"{callback.from_user.full_name} \n Ваш баланс: {user[2]}", reply_markup=builder.as_markup())
     await callback.answer()
 
@@ -75,9 +78,36 @@ async def go_to_random_place(callback: CallbackQuery):
     places = CUR.execute("SELECT * FROM places").fetchall()
     place = random.choice(places)
     builder.row(InlineKeyboardButton(text="🎲 Попробовать Ещё...", callback_data="go_to_random_place"))
-    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_facts"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_places"))
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile(f"assets/photos/places_photos/{place[3]}"), caption=f"<b>{place[1]}</b>\n{place[2]}", reply_markup=builder.as_markup())
     await callback.answer()
+
+
+async def go_to_requests(callback: CallbackQuery):
+    chat_id = callback.message.chat.id
+    await callback.message.answer("Места:")
+    places = CUR.execute("SELECT * FROM checking WHERE type='place'")
+    for place in places:
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="☝️ Перейти", callback_data=f"moderate_content_{place[0]}"))
+        builder.add(InlineKeyboardButton(text="❌ Отклонить", callback_data=f"moderate_discard_{place[0]}"))
+        await callback.bot.send_photo(chat_id, photo=FSInputFile(f"assets/photos/requests_photos/{place[4]}"), caption=f"<b>{place[2]}</b>\n{place[3]}", reply_markup=builder.as_markup())
+
+    await callback.message.answer("Факты:")
+    facts = CUR.execute("SELECT * FROM checking WHERE type='fact'")
+    print(facts)
+    for fact in facts:
+        builder = InlineKeyboardBuilder()
+        builder.add(InlineKeyboardButton(text="☝️ Перейти", callback_data=f"moderate_content_{fact[0]}"))
+        builder.add(InlineKeyboardButton(text="❌ Отклонить", callback_data=f"moderate_discard_{fact[0]}"))
+        await callback.bot.send_photo(chat_id, photo=FSInputFile(f"assets/photos/requests_photos/{fact[4]}"),
+                                      caption=f"<b>{fact[2]}</b>\n{fact[3]}", reply_markup=builder.as_markup())
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"go_to_profile"))
+    await callback.message.answer(text="Входящие запросы ☝️", reply_markup=builder.as_markup())
+    await callback.answer()
+
+
 
 functions = {
     "go_to_home":go_to_home,
@@ -87,5 +117,6 @@ functions = {
     "go_to_facts":go_to_facts,
     "go_to_random_fact":go_to_random_fact,
     "go_to_places":go_to_places,
-    "go_to_random_place":go_to_random_place
+    "go_to_random_place":go_to_random_place,
+    "go_to_requests":go_to_requests
 }
