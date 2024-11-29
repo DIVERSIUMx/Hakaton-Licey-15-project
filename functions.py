@@ -109,16 +109,17 @@ async def go_to_requests(callback: CallbackQuery):
     await callback.answer()
 
 async def go_to_make_request(callback: CallbackQuery):
-    User_publish_redact[callback.from_user.id] = ["НАЗВАНИЕ", "СОДЕРЖАНИЕ", "default.png"]
+    User_publish_redact[callback.from_user.id] = ["НАЗВАНИЕ", "СОДЕРЖАНИЕ", "default.png", "fact"]
     await go_to_redact_user_publish(callback)
 
 
 async  def go_to_redact_user_publish(callback: CallbackQuery):
     user_redact = User_publish_redact[callback.from_user.id]
     builder = InlineKeyboardBuilder()
+    type = {"fact":"факт", "place":"место"}[User_publish_redact[callback.from_user.id][3]]
     builder.row(InlineKeyboardButton(text="Изменить Название", callback_data="pub_user_change_name"), InlineKeyboardButton(text="Изменить Содержание", callback_data="pub_user_change_body"))
-    builder.row(InlineKeyboardButton(text="Изменить Изображение", callback_data="pub_user_change_img"))
-    builder.row(InlineKeyboardButton(text="Предложить", callback_data="qwertyuio"), InlineKeyboardButton(text="Отмена", callback_data="go_to_profile"))
+    builder.row(InlineKeyboardButton(text="Изменить Изображение", callback_data="pub_user_change_img"), InlineKeyboardButton(text=f"Тип: {type}", callback_data="pub_user_change_type"))
+    builder.row(InlineKeyboardButton(text="Предложить", callback_data="pub_user_change_publish"), InlineKeyboardButton(text="Отмена", callback_data="go_to_profile"))
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile(f"assets/photos/requests_photos/{user_redact[2]}"), caption=f"<b>{user_redact[0]}</b>\n{user_redact[1]}", reply_markup=builder.as_markup())
     await callback.answer()
 
@@ -126,9 +127,10 @@ async  def go_to_redact_user_publish(callback: CallbackQuery):
 async  def go_to_redact_user_publish_from_message(message: Message):
     user_redact = User_publish_redact[message.from_user.id]
     builder = InlineKeyboardBuilder()
+    type = {"fact":"факт", "place":"место"}[User_publish_redact[message.from_user.id][3]]
     builder.row(InlineKeyboardButton(text="Изменить Название", callback_data="pub_user_change_name"), InlineKeyboardButton(text="Изменить Содержание", callback_data="pub_user_change_body"))
-    builder.row(InlineKeyboardButton(text="Изменить Изображение", callback_data="pub_user_change_img"))
-    builder.row(InlineKeyboardButton(text="Предложить", callback_data="qwertyuio"), InlineKeyboardButton(text="Отмена", callback_data="go_to_profile"))
+    builder.row(InlineKeyboardButton(text="Изменить Изображение", callback_data="pub_user_change_img"), InlineKeyboardButton(text=f"Тип: {type}", callback_data="pub_user_change_type"))
+    builder.row(InlineKeyboardButton(text="Предложить", callback_data="pub_user_change_publish"), InlineKeyboardButton(text="Отмена", callback_data="go_to_profile"))
     await message.bot.send_photo(message.chat.id, photo=FSInputFile(f"assets/photos/requests_photos/{user_redact[2]}"), caption=f"<b>{user_redact[0]}</b>\n{user_redact[1]}", reply_markup=builder.as_markup())
 
 
