@@ -32,7 +32,29 @@ async def moderate_change_name(callback: CallbackQuery):
     await moderate_functions.moderate_change_body(callback)
 
 
+@dp.callback_query(F.data.startswith("moderate_publish_"))
+async def moderate_publish(callback: CallbackQuery):
+    id = callback.data.lstrip("moderate_publish_")
+    content = CUR.execute(f"SELECT * FROM checking WHERE id={id}").fetchall()[0]
+    if content[1] == "fact":
+        CUR.execute(f"INSERT INTO facts(name, body, img_path) VALUES('{content[2]}', '{content[3]}', '{content[4]}')")
+        CUR.execute(f"DELETE FROM checking WHERE id={id}")
+        CON.commit()
+    else:
+        CUR.execute(f"INSERT INTO places(name, body, img_path) VALUES('{content[2]}', '{content[3]}', '{content[4]}')")
+        CUR.execute(f"DELETE FROM checking WHERE id={id}")
+        CON.commit()
+    await callback.answer()
+    await functions.functions["go_to_requests"](callback=callback)
+
+
 @dp.callback_query(F.data.startswith("moderate_discard_"))
+async def moderate_discard(callback: CallbackQuery):
+    id = callback.data.lstrip("moderate_discard_")
+    CUR.execute(f"DELETE FROM checking WHERE id={id}")
+    CON.commit()
+    await callback.answer()
+    await functions.functions["go_to_requests"](callback=callback)
 
 @dp.message()
 async def echo_handler(message: Message) -> None:
@@ -49,6 +71,7 @@ async def echo_handler(message: Message) -> None:
         CON.commit()
         await moderate_functions.moderate_from_message(message, Moderator_body_redact[user_id])
         Moderator_body_redact.pop(user_id)
+
 
 async def main():
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

@@ -6,7 +6,7 @@ async def moderate(callback: CallbackQuery):
     content = CUR.execute(f"SELECT * FROM checking WHERE id={id}").fetchall()[0]
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="✏️ Изменить название", callback_data=f"moderate_change_name_{id}"), InlineKeyboardButton(text="✏️ Изменить содержание", callback_data=f"moderate_change_body_{id}"))
-    builder.row(InlineKeyboardButton(text="✅ Опубликовать", callback_data=f"moderate_publish_{id}"), InlineKeyboardButton(text="❌ Отклонить", callback_data=f"moderate_publish_{id}"), InlineKeyboardButton(text="⬅️ Отмена", callback_data=f"go_to_requests"))
+    builder.row(InlineKeyboardButton(text="✅ Опубликовать", callback_data=f"moderate_publish_{id}"), InlineKeyboardButton(text="❌ Отклонить", callback_data=f"moderate_discard_{id}"), InlineKeyboardButton(text="⬅️ Отмена", callback_data=f"go_to_requests"))
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile(f"assets/photos/requests_photos/{content[4]}"),
                                   caption=f"<b>{content[2]}</b>\n{content[3]}", reply_markup=builder.as_markup())
     await callback.answer()
