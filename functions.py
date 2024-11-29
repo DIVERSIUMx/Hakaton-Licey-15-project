@@ -14,6 +14,7 @@ async def go_to_home(callback: CallbackQuery) -> None:
 
 async def go_to_storage(callback=None):
     builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="Сборник мест", callback_data="go_to_places"))
     builder.row(InlineKeyboardButton(text="Сборник фактов", callback_data="go_to_facts"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_home"))
     await callback.message.answer("Добро пожаловать в Сборник, здесь <b>Вы</b> можете подобрать для себя интересные места или узнать интересные факты", reply_markup=builder.as_markup())
@@ -43,7 +44,8 @@ async def go_to_facts(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="🎲 Случайный факт", callback_data="go_to_random_fact"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_storage"))
-    await callback.message.answer("Добро пожаловать в <b>сборник фактов</b>, сдесь вы можете узнать много интересных и забавных фактов о Воронежской области", reply_markup=builder.as_markup())
+    text = "Добро пожаловать в <b>сборник фактов</b>, здесь вы можете узнать много интересных и забавных фактов о Воронежской области"
+    await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile("assets/photos/facts.png"), caption=text, reply_markup=builder.as_markup())
     await callback.answer()
 
 
@@ -52,9 +54,29 @@ async def go_to_random_fact(callback: CallbackQuery):
     facts = CUR.execute("SELECT * FROM facts").fetchall()
     fact = random.choice(facts)
     print(random.choice(facts))
-    builder.row(InlineKeyboardButton(text="🎲 Попробывать Ещё...", callback_data="go_to_random_fact"))
+    builder.row(InlineKeyboardButton(text="🎲 Попробовать Ещё...", callback_data="go_to_random_fact"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_facts"))
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile(f"assets/photos/facts_photos/{fact[3]}"), caption=f"<b>{fact[1]}</b>\n{fact[2]}", reply_markup=builder.as_markup())
+    await callback.answer()
+
+
+async def go_to_places(callback: CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="🎲 Ткнуть пальцем в карту", callback_data="go_to_random_place"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_storage"))
+    text = "Добро пожаловать в <b>сборник мест</b>, здесь вы можете узнать о интересных местах Воронежской области"
+    await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile("assets/photos/facts.png"), caption=text,
+                                  reply_markup=builder.as_markup())
+    await callback.answer()
+
+
+async def go_to_random_place(callback: CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    places = CUR.execute("SELECT * FROM places").fetchall()
+    place = random.choice(places)
+    builder.row(InlineKeyboardButton(text="🎲 Попробовать Ещё...", callback_data="go_to_random_place"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_facts"))
+    await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile(f"assets/photos/places_photos/{place[3]}"), caption=f"<b>{place[1]}</b>\n{place[2]}", reply_markup=builder.as_markup())
     await callback.answer()
 
 functions = {
@@ -63,5 +85,7 @@ functions = {
     "go_to_profile":go_to_profile,
     "go_to_market":go_to_market,
     "go_to_facts":go_to_facts,
-    "go_to_random_fact":go_to_random_fact
+    "go_to_random_fact":go_to_random_fact,
+    "go_to_places":go_to_places,
+    "go_to_random_place":go_to_random_place
 }
