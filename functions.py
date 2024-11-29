@@ -25,6 +25,7 @@ async def go_to_profile(callback=None):
     builder = InlineKeyboardBuilder()
 
     user = CUR.execute(f"SELECT * FROM users WHERE telegram_id={callback.from_user.id}").fetchall()
+    builder.row(InlineKeyboardButton(text="Предложить публикацию", callback_data="go_to_make_request"))
     if len(user) == 0:
         CUR.execute(f"INSERT INTO users(telegram_id) VALUES({callback.from_user.id})")
         CON.commit()
@@ -107,6 +108,29 @@ async def go_to_requests(callback: CallbackQuery):
     await callback.message.answer(text="Входящие запросы ☝️", reply_markup=builder.as_markup())
     await callback.answer()
 
+async def go_to_make_request(callback: CallbackQuery):
+    User_publish_redact[callback.from_user.id] = ["НАЗВАНИЕ", "СОДЕРЖАНИЕ", "default.png"]
+    await go_to_redact_user_publish(callback)
+
+
+async  def go_to_redact_user_publish(callback: CallbackQuery):
+    user_redact = User_publish_redact[callback.from_user.id]
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="Изменить Название", callback_data="pub_user_change_name"), InlineKeyboardButton(text="Изменить Содержание", callback_data="pub_user_change_body"))
+    builder.row(InlineKeyboardButton(text="Изменить Изображение", callback_data="pub_user_change_img"))
+    builder.row(InlineKeyboardButton(text="Предложить", callback_data="qwertyuio"), InlineKeyboardButton(text="Отмена", callback_data="go_to_profile"))
+    await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile(f"assets/photos/requests_photos/{user_redact[2]}"), caption=f"<b>{user_redact[0]}</b>\n{user_redact[1]}", reply_markup=builder.as_markup())
+    await callback.answer()
+
+
+async  def go_to_redact_user_publish_from_message(message: Message):
+    user_redact = User_publish_redact[message.from_user.id]
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="Изменить Название", callback_data="pub_user_change_name"), InlineKeyboardButton(text="Изменить Содержание", callback_data="pub_user_change_body"))
+    builder.row(InlineKeyboardButton(text="Изменить Изображение", callback_data="pub_user_change_img"))
+    builder.row(InlineKeyboardButton(text="Предложить", callback_data="qwertyuio"), InlineKeyboardButton(text="Отмена", callback_data="go_to_profile"))
+    await message.bot.send_photo(message.chat.id, photo=FSInputFile(f"assets/photos/requests_photos/{user_redact[2]}"), caption=f"<b>{user_redact[0]}</b>\n{user_redact[1]}", reply_markup=builder.as_markup())
+
 
 
 functions = {
@@ -118,5 +142,7 @@ functions = {
     "go_to_random_fact":go_to_random_fact,
     "go_to_places":go_to_places,
     "go_to_random_place":go_to_random_place,
-    "go_to_requests":go_to_requests
+    "go_to_requests":go_to_requests,
+    "go_to_make_request":go_to_make_request,
+    "go_to_redact_user_publish":go_to_redact_user_publish
 }
