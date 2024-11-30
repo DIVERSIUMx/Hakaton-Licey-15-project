@@ -4,7 +4,7 @@ async def go_to_home(callback: CallbackQuery) -> None:
     bilder = InlineKeyboardBuilder()
     bilder.row(InlineKeyboardButton(text="📕 Сборники", callback_data="go_to_storage"))
     bilder.row(InlineKeyboardButton(text="🕵️‍ Профиль", callback_data="go_to_profile"))
-    #bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
+    bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
 
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile("assets/photos/hello.png"),
                          caption=f"Главное меню",
@@ -17,7 +17,7 @@ async def go_to_storage(callback=None):
     builder.row(InlineKeyboardButton(text="🗺️ Сборник мест", callback_data="go_to_places"))
     builder.row(InlineKeyboardButton(text="💡 Сборник фактов", callback_data="go_to_facts"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_home"))
-    await callback.message.answer("Добро пожаловать в Сборник, здесь <b>Вы</b> можете подобрать для себя интересные места или узнать интересные факты", reply_markup=builder.as_markup())
+    await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile("assets/photos/storage.png"), caption="Добро пожаловать в Сборник, здесь <b>Вы</b> можете подобрать для себя интересные места или узнать интересные факты", reply_markup=builder.as_markup())
     await callback.answer()
 
 
@@ -39,6 +39,8 @@ async def go_to_profile(callback=None):
 
 async def go_to_market(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="🪙 Заработать баллы", callback_data="go_to_tasks"))
+    builder.row(InlineKeyboardButton(text="🛍️ К офферам", callback_data="go_to_offers"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_home"))
     await callback.message.answer("Вы в маркете",  reply_markup=builder.as_markup())
     await  callback.answer()
@@ -137,6 +139,17 @@ async  def go_to_redact_user_publish_from_message(message: Message):
     await message.bot.send_photo(message.chat.id, photo=FSInputFile(f"assets/photos/requests_photos/{user_redact[2]}"), caption=f"<b>{user_redact[0]}</b>\n{user_redact[1]}", reply_markup=builder.as_markup())
 
 
+async def go_to_tasks(callback: CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    tasks = CUR.execute("SELECT * FROM tasks").fetchall()
+    for task in tasks:
+        users = task[2].split(";")
+        if str(callback.from_user.id) not in users:
+            builder.row(InlineKeyboardButton(text=task[1], callback_data=f"task_{task[0]}"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_market"))
+    await callback.message.answer("Выберите доступное задание:", reply_markup=builder.as_markup())
+    await callback.answer()
+
 
 functions = {
     "go_to_home":go_to_home,
@@ -149,5 +162,6 @@ functions = {
     "go_to_random_place":go_to_random_place,
     "go_to_requests":go_to_requests,
     "go_to_make_request":go_to_make_request,
-    "go_to_redact_user_publish":go_to_redact_user_publish
+    "go_to_redact_user_publish":go_to_redact_user_publish,
+    "go_to_tasks":go_to_tasks
 }

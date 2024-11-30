@@ -11,7 +11,7 @@ async def starter(message: Message, bot: Bot) -> None:
     bilder = InlineKeyboardBuilder()
     bilder.row(InlineKeyboardButton(text="📕 Сборники", callback_data="go_to_storage"))
     bilder.row(InlineKeyboardButton(text="🕵️‍ Профиль", callback_data="go_to_profile"))
-    #bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
+    bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
     await bot.send_photo(message.chat.id, photo=FSInputFile("assets/photos/hello.png"),
                          caption=f"Привет, <b>{message.from_user.full_name}</b>",
                          reply_markup=bilder.as_markup())
@@ -66,6 +66,36 @@ async def moderate_discard(callback: CallbackQuery):
     CON.commit()
     await callback.answer()
     await functions.functions["go_to_requests"](callback=callback)
+
+@dp.callback_query(F.data.startswith("task_"))
+async def task(callback: CallbackQuery):
+    id = callback.data.lstrip("task_")
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="✅ Выполнить", callback_data=f"make_task_{id}"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_tasks"))
+    print(id)
+    sql = f'SELECT * FROM tasks WHERE id={id}'
+    print(sql)
+    await callback.message.answer(f"Вы перешли к выполнению задания: {CUR.execute(sql).fetchall()[0][1]}", reply_markup=builder.as_markup())
+    await callback.answer()
+
+
+@dp.callback_query(F.data.startswith("make_task_"))
+async def make_task(callback: CallbackQuery):
+    id = callback.data.lstrip("make_task_")
+    task = CUR.execute(f'SELECT * FROM tasks WHERE id={id}').fetchall()[0]
+    blacklist = task[2].split(";")
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_tasks"))
+    if str(callback.from_user.id) not in blacklist:
+        blacklist.append(str(callback.from_user.id))
+        CUR.execute(f"UPDATE users SET balance=balance+{task[3]}")
+        CUR.execute(f"UPDATE tasks SET users='{';'.join(blacklist)}'")
+        await callback.message.answer(f"Вы выполнили задание!", reply_markup=builder.as_markup())
+    else:
+        await callback.message.answer(f"Вы уже выполнили задание 😡!", reply_markup=builder.as_markup())
+
+
 
 @dp.message(F.photo)
 async def photo_filter(message: Message):
