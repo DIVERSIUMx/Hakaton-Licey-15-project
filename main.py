@@ -4,6 +4,7 @@ import us_redact_functions
 from imports import *
 import functions
 import moderate_functions
+import offers
 
 @dp.message(CommandStart())
 async def starter(message: Message, bot: Bot) -> None:
@@ -11,7 +12,7 @@ async def starter(message: Message, bot: Bot) -> None:
     bilder = InlineKeyboardBuilder()
     bilder.row(InlineKeyboardButton(text="📕 Сборники", callback_data="go_to_storage"))
     bilder.row(InlineKeyboardButton(text="🕵️‍ Профиль", callback_data="go_to_profile"))
-    bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
+    bilder.row(InlineKeyboardButton(text="🏪 Маркет", callback_data="go_to_market"))
     await bot.send_photo(message.chat.id, photo=FSInputFile("assets/photos/hello.png"),
                          caption=f"Привет, <b>{message.from_user.full_name}</b>",
                          reply_markup=bilder.as_markup())
@@ -91,9 +92,14 @@ async def make_task(callback: CallbackQuery):
         blacklist.append(str(callback.from_user.id))
         CUR.execute(f"UPDATE users SET balance=balance+{task[3]}")
         CUR.execute(f"UPDATE tasks SET users='{';'.join(blacklist)}'")
-        await callback.message.answer(f"Вы выполнили задание!", reply_markup=builder.as_markup())
+        await callback.message.answer(f"Вы выполнили задание! +{task[3]} баллов", reply_markup=builder.as_markup())
     else:
         await callback.message.answer(f"Вы уже выполнили задание 😡!", reply_markup=builder.as_markup())
+
+
+@dp.callback_query(F.data.startswith("offer_"))
+async def offer(callback: CallbackQuery):
+    await offers.offers[callback.data](callback)
 
 
 

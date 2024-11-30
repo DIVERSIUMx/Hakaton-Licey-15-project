@@ -4,7 +4,7 @@ async def go_to_home(callback: CallbackQuery) -> None:
     bilder = InlineKeyboardBuilder()
     bilder.row(InlineKeyboardButton(text="📕 Сборники", callback_data="go_to_storage"))
     bilder.row(InlineKeyboardButton(text="🕵️‍ Профиль", callback_data="go_to_profile"))
-    bilder.row(InlineKeyboardButton(text="Маркет 🏪", callback_data="go_to_market"))
+    bilder.row(InlineKeyboardButton(text="🏪 Маркет", callback_data="go_to_market"))
 
     await callback.bot.send_photo(callback.message.chat.id, photo=FSInputFile("assets/photos/hello.png"),
                          caption=f"Главное меню",
@@ -42,7 +42,7 @@ async def go_to_market(callback: CallbackQuery):
     builder.row(InlineKeyboardButton(text="🪙 Заработать баллы", callback_data="go_to_tasks"))
     builder.row(InlineKeyboardButton(text="🛍️ К офферам", callback_data="go_to_offers"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_home"))
-    await callback.message.answer("Вы в маркете",  reply_markup=builder.as_markup())
+    await callback.message.answer("добро пожаловать в <b>маркет</b>, здесь вы можете  заробатывать баллы, проходя разные задания и тратить их на промокоды, статусы и т. д.",  reply_markup=builder.as_markup())
     await  callback.answer()
 
 
@@ -142,13 +142,23 @@ async  def go_to_redact_user_publish_from_message(message: Message):
 async def go_to_tasks(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     tasks = CUR.execute("SELECT * FROM tasks").fetchall()
+    balance = CUR.execute(f"SELECT balance FROM users WHERE telegram_id={callback.from_user.id}").fetchall()[0][0]
     for task in tasks:
         users = task[2].split(";")
         if str(callback.from_user.id) not in users:
-            builder.row(InlineKeyboardButton(text=task[1], callback_data=f"task_{task[0]}"))
+            builder.row(InlineKeyboardButton(text=f"{task[1]}: {task[3]}🪙", callback_data=f"task_{task[0]}"))
     builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_market"))
-    await callback.message.answer("Выберите доступное задание:", reply_markup=builder.as_markup())
+    await callback.message.answer(f"Ваш баланс: {balance}\nВыберите доступное задание:", reply_markup=builder.as_markup())
     await callback.answer()
+
+async def go_to_offers(callback: CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="Промокод на онлайн-заказ в ЧитайГород: 1000🪙", callback_data="offer_promocode"))
+    builder.row(InlineKeyboardButton(text="⬅️ Назад", callback_data="go_to_market"))
+    balance = CUR.execute(f"SELECT balance FROM users WHERE telegram_id={callback.from_user.id}").fetchall()[0][0]
+    await callback.message.answer(f"Добро пожаловать в оффер-маркет, сдесь вы можете приобрести промокоды на покупку сувениров, особого статуса и т. д.\nВаш баланс: {balance}", reply_markup=builder.as_markup())
+    await callback.answer()
+
 
 
 functions = {
@@ -163,5 +173,6 @@ functions = {
     "go_to_requests":go_to_requests,
     "go_to_make_request":go_to_make_request,
     "go_to_redact_user_publish":go_to_redact_user_publish,
-    "go_to_tasks":go_to_tasks
+    "go_to_tasks":go_to_tasks,
+    "go_to_offers":go_to_offers
 }
